@@ -1,6 +1,12 @@
 from flask_smorest import Blueprint, abort
-from app.api.schemas import UserSchema, GetUserSchema,UserUpdateSchema
-from app.crud.user import create_user, get_users, soft_delete_user, get_user_by_id,update_user
+from app.api.schemas import UserSchema, GetUserSchema, UserUpdateSchema
+from app.crud.user import (
+    create_user,
+    get_users,
+    soft_delete_user,
+    get_user_by_id,
+    update_user,
+)
 from flask_jwt_extended import jwt_required
 from app.core.security import admin_required
 from flask.views import MethodView
@@ -29,17 +35,18 @@ class UserDetail(MethodView):
         return get_user_by_id(user_id)
 
     @jwt_required()
-    @blp.response(status_code=204)
+    @admin_required("admin")
+    @blp.response(status_code=200)
     def delete(self, user_id):
         user = soft_delete_user(user_id)
         if not user:
             abort(404, description="User not found")
         return {"message": "Successful"}
-    
+
     @jwt_required()
     @admin_required("admin")
     @blp.arguments(UserUpdateSchema)
-    @blp.response(200,UserSchema)
-    def patch(self,data,user_id):
-        user = update_user(user_id,data)
-        return user 
+    @blp.response(200, UserSchema)
+    def patch(self, data, user_id):
+        user = update_user(user_id, data)
+        return user
